@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menolak Serangan Fajar</title>
+    <title>Time Interval Counter</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
@@ -28,11 +28,6 @@
     <!-- RIGHT SPLIT: COUNTER INTERFACE -->
     <div class="w-full md:w-2/3 flex flex-col items-center justify-center p-8 bg-slate-900 min-h-[50vh] md:min-h-screen">
         
-        <!-- 
-            RESTORED: 
-            - Reverted bg-slate-900 to bg-slate-800
-            - Brought back rounded-2xl, shadow-2xl, and border
-        -->
         <div class="bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border border-slate-700">
             
             <!-- Header -->
@@ -40,18 +35,11 @@
                 Kontribusi ANTI-Serangan Fajar
             </h1>
 
-            <!-- REMOVED: Old Educational Content Area was here -->
-
             <!-- Counter Display -->
             <div class="mb-8">
                 <div id="counter" class="text-8xl font-bold text-emerald-400 tabular-nums transition-all duration-300">
                     0
                 </div>
-                <!-- 
-                     MODIFIED: 
-                     - Changed text-slate-500 to text-slate-800
-                     - This makes the text the exact same color as the card background (invisible)
-                -->
                 <p class="text-slate-800 text-xs mt-2 select-none">
                     <span id="base-count"></span> (Time) + <span id="manual-count">0</span> (Manual)
                 </p>
@@ -270,8 +258,23 @@
             const now = Date.now();
             const diff = now - REFERENCE_TIME;
 
-            // Calculate how many 6-hour chunks have passed
-            const timeBasedCount = Math.max(0, Math.floor(diff / SIX_HOURS_MS));
+            // 1. Calculate total intervals passed (how many 6-hour blocks)
+            const totalIntervals = Math.max(0, Math.floor(diff / SIX_HOURS_MS));
+
+            // 2. Calculate deterministic random sum
+            // Instead of just (intervals * 1), we sum a random number (1-2) for each interval.
+            // We use Math.sin(index) as a seed to ensure it's always the same random number
+            // for the same interval (so it survives page refreshes).
+            let timeBasedCount = 0;
+            for (let i = 0; i < totalIntervals; i++) {
+                // Deterministic 'random' number generator for index i
+                const seed = i + 1; 
+                const pseudoRandom = Math.abs(Math.sin(seed * 9999));
+                // CHANGED: Scale to 2 and add 1, resulting in either 1 or 2.
+                const increment = Math.floor(pseudoRandom * 2) + 1; 
+                
+                timeBasedCount += increment;
+            }
 
             // Calculate time until next increment
             const msUntilNext = SIX_HOURS_MS - (diff % SIX_HOURS_MS);
@@ -314,5 +317,4 @@
         setInterval(updateCounter, 1000);
     </script>
 </body>
-
 </html>
